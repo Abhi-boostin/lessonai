@@ -15,6 +15,22 @@ interface LessonCreatorProps {
   onSavePlan: (title: string, content: string) => void;
 }
 
+const formatGeminiResponse = (text: string) => {
+  // Remove any standalone # and duplicate titles
+  const cleanedText = text
+    .replace(/^#\s*$/gm, '')  // Remove standalone #
+    .replace(/^Lesson Plan:.*$/gm, '') // Remove duplicate lesson plan titles
+    .replace(/\n{3,}/g, '\n\n'); // Replace multiple newlines with double
+
+  // Split into sections and process
+  const sections = cleanedText
+    .split(/(?=(?:Basic Information|Learning Objectives|Materials and Resources|Lesson Structure|Extensions and Modifications))/g)
+    .map(section => section.trim())
+    .filter(section => section.length > 0);
+
+  return sections.join('\n\n');
+};
+
 export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
   const [prompt, setPrompt] = useState("");
   const [generatedPlan, setGeneratedPlan] = useState<string>("");
@@ -45,11 +61,10 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
     setIsLoading(true);
     try {
       const response = await generateLessonPlan(prompt);
-      // Clean up any stray # symbols
-      const cleanedResponse = response.replace(/^#\s*|(?<=\n)#\s*/g, '');
-      setGeneratedPlan(cleanedResponse);
+      const formattedResponse = formatGeminiResponse(response);
+      setGeneratedPlan(formattedResponse);
     } catch (error) {
-      console.error("Error generating plan:", error);
+      console.error('Error generating plan:', error);
     } finally {
       setIsLoading(false);
     }
@@ -102,6 +117,50 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
     }
   };
 
+  // Render section with proper formatting
+  const renderContent = (content: string) => {
+    const sections = content.split(/(?=##\s+[A-Z])/);
+    
+    return sections.map((section, index) => {
+      if (!section.trim()) return null;
+      
+      const lines = section.split('\n');
+      const title = lines[0].replace(/^##\s+/, '');
+      const content = lines.slice(1);
+      
+      return (
+        <Card key={index} className="p-6 bg-card/30 backdrop-blur-sm">
+          <h2 className="text-xl font-semibold mb-4">{title}</h2>
+          <div className="space-y-2">
+            {content.map((line, i) => {
+              const trimmedLine = line.trim();
+              if (!trimmedLine) return null;
+              
+              if (trimmedLine.startsWith('- ')) {
+                return (
+                  <li key={i} className="ml-4 text-base leading-relaxed"
+                    dangerouslySetInnerHTML={{
+                      __html: trimmedLine.replace('- ', '')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    }}
+                  />
+                );
+              }
+              
+              return (
+                <p key={i} className="text-base leading-relaxed"
+                  dangerouslySetInnerHTML={{
+                    __html: trimmedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  }}
+                />
+              );
+            })}
+          </div>
+        </Card>
+      );
+    });
+  };
+
   return (
     <div className="max-w-3xl mx-auto w-full space-y-6">
       <Card className="border-2 relative bg-card/50 backdrop-blur-sm">
@@ -136,48 +195,7 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
           </Card>
           
           <div className="space-y-6">
-            {sections.map((section, index) => {
-              if (!section.trim()) return null;
-              
-              const [title, ...content] = section.split('\n');
-              const headerContent = title.replace(/^##?\s+/, '');
-              
-              return (
-                <Card key={index} className="p-6 bg-card/50 backdrop-blur-sm">
-                  <h2 className="text-xl font-semibold text-primary mb-4">
-                    {headerContent}
-                  </h2>
-                  <div className="prose dark:prose-invert max-w-none">
-                    {content.map((line, i) => {
-                      if (!line.trim()) return null;
-                      if (line.startsWith('- ')) {
-                        return (
-                          <li key={i} className="text-base leading-relaxed ml-4"
-                            dangerouslySetInnerHTML={{
-                              __html: line.replace('- ', '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            }}
-                          />
-                        );
-                      }
-                      if (line.startsWith('### ')) {
-                        return (
-                          <h3 key={i} className="text-lg font-medium mt-4 mb-2">
-                            {line.replace('### ', '')}
-                          </h3>
-                        );
-                      }
-                      return (
-                        <p key={i} className="text-base leading-relaxed"
-                          dangerouslySetInnerHTML={{
-                            __html: line.trim().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                </Card>
-              );
-            })}
+            {renderContent(generatedPlan)}
           </div>
 
           <div className="flex justify-end gap-2 mt-6">

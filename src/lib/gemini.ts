@@ -6,45 +6,45 @@ export async function generateLessonPlan(prompt: string): Promise<string> {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    const systemPrompt = `Create a detailed lesson plan for the following topic using this structured format:
+    const systemPrompt = `Create a detailed lesson plan for the following topic:
 
-Lesson Plan: ${prompt}
+${prompt}
 
-## Basic Information
+Basic Information
 - Subject Area:
 - Grade Level:
 - Duration:
 - Prerequisites:
 
-## Learning Objectives
+Learning Objectives
 [List 3-4 specific, measurable objectives]
 
-## Materials and Resources
+Materials and Resources
 - Required Materials:
 - Technology Needs:
 - Additional Resources:
 
-## Lesson Structure
+Lesson Structure
 
-### 1. Introduction (10 minutes)
+1. Introduction (10 minutes)
 [Engaging hook and activation of prior knowledge]
 
-### 2. Main Content (30 minutes)
+2. Main Content (30 minutes)
 [Step-by-step instruction and activities]
 
-### 3. Guided Practice (20 minutes)
+3. Guided Practice (20 minutes)
 [Interactive activities and demonstrations]
 
-### 4. Independent Practice (15 minutes)
+4. Independent Practice (15 minutes)
 [Student-centered activities]
 
-### 5. Assessment (10 minutes)
+5. Assessment (10 minutes)
 [Formative assessment strategies]
 
-### 6. Conclusion (5 minutes)
+6. Conclusion (5 minutes)
 [Summary and reflection]
 
-## Extensions and Modifications
+Extensions and Modifications
 - For Advanced Learners:
 - For Struggling Learners:
 - Homework/Follow-up:`;
