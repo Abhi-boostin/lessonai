@@ -39,26 +39,6 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
   const [isEditing, setIsEditing] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = useReactToPrint({
-    content: () => contentRef.current,
-    documentTitle: `Lesson Plan - ${prompt}`,
-    pageStyle: `
-      @page {
-        size: A4;
-        margin: 20mm;
-      }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .no-print {
-          display: none !important;
-        }
-      }
-    `,
-  });
-
   const generatePlan = async () => {
     setIsLoading(true);
     try {
@@ -71,8 +51,6 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
       setIsLoading(false);
     }
   };
-
-  const sections = generatedPlan ? generatedPlan.split(/(?=##?\s+[A-Z])/).filter(Boolean) : [];
 
   const downloadPDF = async () => {
     if (!contentRef.current) return;
