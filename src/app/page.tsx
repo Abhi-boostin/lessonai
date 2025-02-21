@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Auth from "@/components/Auth";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import HaloBackground from "@/components/HaloBackground";
+import { LoginCredentials } from "@/components/LoginCredentials";
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -27,6 +28,7 @@ export default function Home() {
         <div className="flex-1 flex items-center justify-center">
           <Auth />
         </div>
+        <LoginCredentials />
       </div>
     </HaloBackground>
   );
