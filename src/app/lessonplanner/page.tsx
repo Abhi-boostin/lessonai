@@ -1,55 +1,39 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useReactToPrint } from 'react-to-print';
+import { generateLessonPlan } from "@/lib/gemini";
 
 interface LessonPlan {
-  topic: string;
-  gradeLevel: string;
-  mainConcept: string;
-  subtopics: string[];
-  materials: string[];
-  objectives: string[];
-  introduction: string;
-  development: string;
-  conclusion: string;
-  assessment: string;
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
 }
 
 export default function LessonPlanner() {
   const router = useRouter();
-  const [lessonPlan, setLessonPlan] = useState<LessonPlan>({
-    topic: "",
-    gradeLevel: "",
-    mainConcept: "",
-    subtopics: [""],
-    materials: [""],
-    objectives: [""],
-    introduction: "",
-    development: "",
-    conclusion: "",
-    assessment: "",
-  });
+  const [prompt, setPrompt] = useState("");
+  const [generatedPlan, setGeneratedPlan] = useState<string>("");
+  const [savedPlans, setSavedPlans] = useState<LessonPlan[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
     if (isLoggedIn !== "true") {
       router.push("/");
+      return;
+    }
+
+    // Load saved plans from localStorage
+    const saved = localStorage.getItem("lessonPlans");
+    if (saved) {
+      setSavedPlans(JSON.parse(saved));
     }
   }, [router]);
 
@@ -58,169 +42,101 @@ export default function LessonPlanner() {
     router.push("/");
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setLessonPlan((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const generatePlan = async () => {
+    setIsLoading(true);
+    try {
+      const response = await generateLessonPlan(prompt);
+      setGeneratedPlan(response);
+    } catch (error) {
+      console.error("Error generating plan:", error);
+      // Add error handling UI if needed
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleArrayChange = (
-    index: number,
-    value: string,
-    field: keyof LessonPlan
-  ) => {
-    setLessonPlan((prev) => ({
-      ...prev,
-      [field]: prev[field].map((item: string, i: number) =>
-        i === index ? value : item
-      ),
-    }));
+  const savePlan = () => {
+    if (!generatedPlan) return;
+
+    const newPlan: LessonPlan = {
+      id: Date.now().toString(),
+      title: prompt.slice(0, 50) + "...",
+      content: generatedPlan,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedPlans = [...savedPlans, newPlan];
+    setSavedPlans(updatedPlans);
+    localStorage.setItem("lessonPlans", JSON.stringify(updatedPlans));
   };
 
-  const addArrayItem = (field: keyof LessonPlan) => {
-    setLessonPlan((prev) => ({
-      ...prev,
-      [field]: [...prev[field], ""],
-    }));
-  };
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+  });
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Lesson Planner</h1>
-        <Button onClick={handleLogout} variant="outline">
-          Logout
-        </Button>
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <div className="w-64 border-r p-4 bg-secondary/10">
+        <div className="flex flex-col h-full">
+          <h2 className="text-lg font-bold mb-4">Saved Plans</h2>
+          <div className="flex-grow overflow-auto">
+            {savedPlans.map((plan) => (
+              <div
+                key={plan.id}
+                className="p-3 mb-2 bg-card rounded-lg cursor-pointer hover:bg-accent/20"
+                onClick={() => {
+                  setPrompt(plan.title);
+                  setGeneratedPlan(plan.content);
+                }}
+              >
+                <h3 className="font-medium text-sm">{plan.title}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(plan.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+          <Button onClick={handleLogout} variant="outline" className="mt-4">
+            Logout
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create New Lesson Plan</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-2">Topic</label>
-              <Input
-                name="topic"
-                value={lessonPlan.topic}
-                onChange={handleChange}
-                placeholder="Enter lesson topic"
-              />
-            </div>
-            <div>
-              <label className="block mb-2">Grade Level</label>
-              <Input
-                name="gradeLevel"
-                value={lessonPlan.gradeLevel}
-                onChange={handleChange}
-                placeholder="Enter grade level"
-              />
-            </div>
+      {/* Main Content */}
+      <div className="flex-1 p-6 flex flex-col">
+        <div className="max-w-3xl mx-auto w-full">
+          <Textarea
+            placeholder="Enter your lesson plan topic or requirements..."
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            className="mb-4 h-32"
+          />
+          <div className="flex gap-2 mb-6">
+            <Button onClick={generatePlan} disabled={!prompt || isLoading}>
+              {isLoading ? "Generating..." : "Generate Plan"}
+            </Button>
           </div>
 
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="objectives">
-              <AccordionTrigger>Learning Objectives</AccordionTrigger>
-              <AccordionContent>
-                {lessonPlan.objectives.map((objective, index) => (
-                  <div key={index} className="mb-2">
-                    <Input
-                      value={objective}
-                      onChange={(e) =>
-                        handleArrayChange(index, e.target.value, "objectives")
-                      }
-                      placeholder={`Objective ${index + 1}`}
-                    />
-                  </div>
-                ))}
-                <Button
-                  onClick={() => addArrayItem("objectives")}
-                  variant="outline"
-                  size="sm"
-                >
-                  Add Objective
+          {generatedPlan && (
+            <Card>
+              <CardContent className="p-6" ref={printRef}>
+                <div className="prose max-w-none">
+                  <pre className="whitespace-pre-wrap">{generatedPlan}</pre>
+                </div>
+              </CardContent>
+              <div className="flex gap-2 p-4 border-t">
+                <Button onClick={savePlan} variant="outline">
+                  Save Plan
                 </Button>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="materials">
-              <AccordionTrigger>Materials Needed</AccordionTrigger>
-              <AccordionContent>
-                {lessonPlan.materials.map((material, index) => (
-                  <div key={index} className="mb-2">
-                    <Input
-                      value={material}
-                      onChange={(e) =>
-                        handleArrayChange(index, e.target.value, "materials")
-                      }
-                      placeholder={`Material ${index + 1}`}
-                    />
-                  </div>
-                ))}
-                <Button
-                  onClick={() => addArrayItem("materials")}
-                  variant="outline"
-                  size="sm"
-                >
-                  Add Material
+                <Button onClick={handlePrint} variant="outline">
+                  Download PDF
                 </Button>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="lesson-outline">
-              <AccordionTrigger>Lesson Outline</AccordionTrigger>
-              <AccordionContent className="space-y-4">
-                <div>
-                  <label className="block mb-2">Introduction</label>
-                  <Textarea
-                    name="introduction"
-                    value={lessonPlan.introduction}
-                    onChange={handleChange}
-                    placeholder="Describe the introduction"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2">Development</label>
-                  <Textarea
-                    name="development"
-                    value={lessonPlan.development}
-                    onChange={handleChange}
-                    placeholder="Describe the main development"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2">Conclusion</label>
-                  <Textarea
-                    name="conclusion"
-                    value={lessonPlan.conclusion}
-                    onChange={handleChange}
-                    placeholder="Describe the conclusion"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2">Assessment</label>
-                  <Textarea
-                    name="assessment"
-                    value={lessonPlan.assessment}
-                    onChange={handleChange}
-                    placeholder="Describe the assessment method"
-                  />
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline">Save Draft</Button>
-            <Button>Create Lesson Plan</Button>
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 } 
