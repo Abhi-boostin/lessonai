@@ -24,9 +24,10 @@ interface LessonPlanDrawerProps {
   } | null;
   isOpen: boolean;
   onClose: () => void;
+  onDelete: (id: string) => void;
 }
 
-export function LessonPlanDrawer({ plan, isOpen, onClose }: LessonPlanDrawerProps) {
+export function LessonPlanDrawer({ plan, isOpen, onClose, onDelete }: LessonPlanDrawerProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   const downloadPDF = async () => {
@@ -167,6 +168,13 @@ export function LessonPlanDrawer({ plan, isOpen, onClose }: LessonPlanDrawerProp
                 className="bg-background/50 backdrop-blur-sm"
               >
                 Download PDF
+              </Button>
+              <Button 
+                onClick={() => plan && onDelete(plan.id)}
+                variant="destructive"
+                className="bg-destructive/90 hover:bg-destructive"
+              >
+                Delete
               </Button>
               <DrawerClose asChild>
                 <Button variant="outline" className="flex-1">

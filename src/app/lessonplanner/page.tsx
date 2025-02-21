@@ -77,6 +77,14 @@ export default function LessonPlanner() {
     router.push('/');
   };
 
+  const handleDeletePlan = (id: string) => {
+    const updatedPlans = savedPlans.filter(plan => plan.id !== id);
+    localStorage.setItem('savedPlans', JSON.stringify(updatedPlans));
+    setSavedPlans(updatedPlans);
+    setSelectedPlan(null);
+    setIsDrawerOpen(false);
+  };
+
   return (
     <div className="min-h-screen relative">
       <PixelBackground />
@@ -133,6 +141,7 @@ export default function LessonPlanner() {
           plan={selectedPlan}
           isOpen={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
+          onDelete={handleDeletePlan}
         />
       </div>
     </div>
