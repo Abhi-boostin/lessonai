@@ -22,12 +22,16 @@ export default function Home() {
   return (
     <HaloBackground>
       <div className="min-h-screen flex flex-col">
-        <div className="absolute top-4 right-4">
-          <ThemeToggle />
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <Auth />
-        </div>
+        {!isLoggedIn && (
+          <>
+            <div className="absolute top-4 right-4">
+              <ThemeToggle />
+            </div>
+            <div className="flex-1 flex items-center justify-center">
+              <Auth />
+            </div>
+          </>
+        )}
         <LoginCredentials />
       </div>
     </HaloBackground>

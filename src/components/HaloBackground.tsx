@@ -3,9 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 
+interface VantaEffect {
+  destroy: () => void;
+}
+
 export default function HaloBackground({ children }: { children: React.ReactNode }) {
   const vantaRef = useRef<HTMLDivElement>(null);
-  const [vantaEffect, setVantaEffect] = useState<any>(null);
+  const [vantaEffect, setVantaEffect] = useState<VantaEffect | null>(null);
 
   const initVanta = () => {
     if (typeof window !== 'undefined' && window.VANTA && vantaRef.current && !vantaEffect) {
@@ -30,17 +34,17 @@ export default function HaloBackground({ children }: { children: React.ReactNode
         vantaEffect.destroy();
       }
     };
-  }, []);
+  }, [vantaEffect, initVanta]);
 
   return (
     <>
       <Script 
         src="/three.r134.min.js" 
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
       />
       <Script 
         src="/vanta.halo.min.js"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
         onLoad={initVanta}
       />
       <div ref={vantaRef} className="fixed inset-0 -z-10">

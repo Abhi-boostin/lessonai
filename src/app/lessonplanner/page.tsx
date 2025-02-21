@@ -57,9 +57,6 @@ export default function LessonPlanner() {
     localStorage.setItem("lessonPlans", JSON.stringify(updatedPlans));
   };
 
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-  });
 
   const handlePlanClick = (plan: LessonPlan) => {
     setSelectedPlan(plan);
