@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LessonCreator } from "@/components/LessonCreator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LessonPlanDrawer } from "@/components/LessonPlanDrawer";
+import { RefreshCcw } from "lucide-react";
 
 interface LessonPlan {
   id: string;
@@ -64,6 +65,17 @@ export default function LessonPlanner() {
     setIsDrawerOpen(true);
   };
 
+  const handleRefresh = () => {
+    // Clear all localStorage items
+    localStorage.clear();
+    // Reset states
+    setSavedPlans([]);
+    setSelectedPlan(null);
+    setIsDrawerOpen(false);
+    // Redirect to login
+    router.push('/');
+  };
+
   return (
     <div className="min-h-screen relative">
       <div 
@@ -81,6 +93,14 @@ export default function LessonPlanner() {
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 className="text-2xl font-bold">Lesson Planner</h1>
             <div className="flex items-center gap-4">
+              <Button 
+                onClick={handleRefresh} 
+                variant="ghost"
+                size="icon"
+                className="hover:bg-accent/50"
+              >
+                <RefreshCcw className="h-4 w-4" />
+              </Button>
               <ThemeToggle />
               <Button onClick={handleLogout} variant="outline">
                 Logout
