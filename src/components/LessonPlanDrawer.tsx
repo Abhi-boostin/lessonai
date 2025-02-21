@@ -13,6 +13,8 @@ import { useReactToPrint } from 'react-to-print';
 import { useRef } from 'react';
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface LessonPlanDrawerProps {
   plan: {
@@ -27,25 +29,50 @@ interface LessonPlanDrawerProps {
 export function LessonPlanDrawer({ plan, isOpen, onClose }: LessonPlanDrawerProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = useReactToPrint({
-    content: () => contentRef.current,
-    documentTitle: `Lesson Plan - ${plan?.title || 'Untitled'}`,
-    pageStyle: `
-      @page {
-        size: A4;
-        margin: 20mm;
-      }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
+  const downloadPDF = async () => {
+    if (!contentRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: null
+      });
+      
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      const pdf = new jsPDF('p', 'mm');
+      let firstPage = true;
+      
+      while (heightLeft >= 0) {
+        if (!firstPage) {
+          pdf.addPage();
         }
-        .no-print {
-          display: none !important;
-        }
+        
+        pdf.addImage(
+          canvas.toDataURL('image/png'), 
+          'PNG', 
+          0, 
+          position,
+          imgWidth, 
+          imgHeight
+        );
+        
+        heightLeft -= pageHeight;
+        position -= pageHeight;
+        firstPage = false;
       }
-    `,
-  });
+      
+      pdf.save(`Lesson Plan - ${plan?.title || 'Untitled'}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
 
   const formatText = (text: string) => {
     return text
@@ -135,9 +162,9 @@ export function LessonPlanDrawer({ plan, isOpen, onClose }: LessonPlanDrawerProp
           <DrawerFooter className="border-t">
             <div className="flex gap-2">
               <Button 
-                onClick={handlePrint} 
-                variant="default"
-                className="flex-1"
+                onClick={downloadPDF}
+                variant="outline"
+                className="bg-background/50 backdrop-blur-sm"
               >
                 Download PDF
               </Button>

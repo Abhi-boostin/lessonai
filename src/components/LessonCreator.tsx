@@ -8,6 +8,8 @@ import { generateLessonPlan } from "@/lib/gemini";
 import { useReactToPrint } from 'react-to-print';
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface LessonCreatorProps {
   onSavePlan: (title: string, content: string) => void;
@@ -54,6 +56,51 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
   };
 
   const sections = generatedPlan ? generatedPlan.split(/(?=##?\s+[A-Z])/).filter(Boolean) : [];
+
+  const downloadPDF = async () => {
+    if (!contentRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: null
+      });
+      
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      const pdf = new jsPDF('p', 'mm');
+      let firstPage = true;
+      
+      while (heightLeft >= 0) {
+        if (!firstPage) {
+          pdf.addPage();
+        }
+        
+        pdf.addImage(
+          canvas.toDataURL('image/png'), 
+          'PNG', 
+          0, 
+          position,
+          imgWidth, 
+          imgHeight
+        );
+        
+        heightLeft -= pageHeight;
+        position -= pageHeight;
+        firstPage = false;
+      }
+      
+      pdf.save(`Lesson Plan - ${prompt}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto w-full space-y-6">
@@ -135,7 +182,7 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
 
           <div className="flex justify-end gap-2 mt-6">
             <Button 
-              onClick={handlePrint}
+              onClick={downloadPDF}
               variant="outline"
               className="bg-background/50 backdrop-blur-sm"
             >
