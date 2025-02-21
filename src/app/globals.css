@@ -2,8 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --transition-duration: 0.5s;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @layer base {
@@ -69,4 +74,22 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.theme-transition {
+  position: fixed;
+  pointer-events: none;
+  z-index: 50;
+  top: var(--theme-transition-top);
+  left: var(--theme-transition-left);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background-color: hsl(var(--background));
+  transition: transform var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(0);
+}
+
+.theme-transition.active {
+  transform: scale(300);
 }
