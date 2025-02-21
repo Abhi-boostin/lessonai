@@ -161,6 +161,14 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
     });
   };
 
+  const handleSavePlanWithScroll = (title: string, content: string) => {
+    onSavePlan(title, content);
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <div className="max-w-3xl mx-auto w-full space-y-6">
       <Card className="border-2 relative bg-card/50 backdrop-blur-sm">
@@ -207,8 +215,9 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
               Download PDF
             </Button>
             <Button 
-              onClick={() => onSavePlan(prompt, generatedPlan)} 
+              onClick={() => handleSavePlanWithScroll(prompt, generatedPlan)} 
               variant="default"
+              className="transform transition-all duration-200 hover:scale-105 hover:bg-primary/90 hover:shadow-lg active:scale-95"
             >
               Save Plan
             </Button>

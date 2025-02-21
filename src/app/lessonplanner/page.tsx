@@ -10,6 +10,7 @@ import { LessonCreator } from "@/components/LessonCreator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LessonPlanDrawer } from "@/components/LessonPlanDrawer";
 import { RefreshCcw } from "lucide-react";
+import { PixelBackground } from "@/components/PixelBackground";
 
 interface LessonPlan {
   id: string;
@@ -78,18 +79,9 @@ export default function LessonPlanner() {
 
   return (
     <div className="min-h-screen relative">
-      <div 
-        className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-slate-950"
-      >
-        <div 
-          className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:6rem_4rem]"
-        />
-        <div 
-          className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"
-        />
-      </div>
+      <PixelBackground />
       <div className="relative">
-        <header className="border-b">
+        <header className="border-b backdrop-blur-sm bg-background/50">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 className="text-2xl font-bold">Lesson Planner</h1>
             <div className="flex items-center gap-4">
