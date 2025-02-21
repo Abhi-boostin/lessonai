@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lesson Planner AI
+
+An AI-powered lesson planning assistant built with Next.js, Tailwind CSS, and Google's Gemini AI. Create, manage, and export professional lesson plans with ease.
+
+## Features
+
+- 🤖 AI-Powered Lesson Generation
+- 🎨 Beautiful UI with Light/Dark Mode
+- 📱 Responsive Design
+- 💾 Local Storage for Saved Plans
+- 📄 Export to PDF
+- 🖨️ Print Support
+- 🔐 Simple Authentication System
+
+## Features in Detail
+
+### AI Lesson Plan Generation
+- Input your lesson topic or requirements
+- AI generates structured lesson plans with:
+  - Basic Information
+  - Learning Objectives
+  - Materials and Resources
+  - Lesson Structure
+  - Extensions and Modifications
+
+### Plan Management
+- Save generated plans locally
+- View saved plans
+- Delete unwanted plans
+- Export plans as PDF
+- Print plans directly
+
+### User Interface
+- Clean, modern design
+- Smooth theme transitions
+- Responsive layout
+- Interactive animations
+- Accessible components
+
+## Tech Stack
+
+- [Next.js 15](https://nextjs.org/) - React Framework
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [Gemini AI](https://ai.google.dev/) - AI Model
+- [Radix UI](https://www.radix-ui.com/) - UI Components
+- [shadcn/ui](https://ui.shadcn.com/) - Component Library
+- [jsPDF](https://github.com/parallax/jsPDF) - PDF Generation
+- [html2canvas](https://html2canvas.hertzen.com/) - HTML to Canvas Conversion
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ 
+- npm or yarn
+- Google Gemini API Key
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/lessonai.git
+cd lessonai
+```
+
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Create a `.env` file in the root directory and add your Gemini API key:
+```env
+NEXT_PUBLIC_GEMINI_API_KEY=your_api_key_here
+```
+
+4. Run the development server:
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Demo Credentials
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```README.md
+Username: abhiboostin
+Password: abhiboostin123
+```
 
-## Learn More
+## Contributing
 
-To learn more about Next.js, take a look at the following resources:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Deploy on Vercel
+## Acknowledgments
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+- [Google Generative AI](https://ai.google.dev/)
+- [shadcn/ui Components](https://ui.shadcn.com/)
