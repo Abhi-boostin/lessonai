@@ -20,7 +20,8 @@ const formatGeminiResponse = (text: string) => {
   const cleanedText = text
     .replace(/^#\s*$/gm, '')  // Remove standalone #
     .replace(/^Lesson Plan:.*$/gm, '') // Remove duplicate lesson plan titles
-    .replace(/\n{3,}/g, '\n\n'); // Replace multiple newlines with double
+    .replace(/\n{3,}/g, '\n\n') // Replace multiple newlines with double
+    .replace(/^(##\s+[A-Z][^*\n]+)$/gm, '## **$1**'); // Add asterisks to section titles
 
   // Split into sections and process
   const sections = cleanedText
@@ -35,6 +36,7 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
   const [prompt, setPrompt] = useState("");
   const [generatedPlan, setGeneratedPlan] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
@@ -117,7 +119,6 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
     }
   };
 
-  // Render section with proper formatting
   const renderContent = (content: string) => {
     const sections = content.split(/(?=##\s+[A-Z])/);
     
@@ -138,20 +139,39 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
               
               if (trimmedLine.startsWith('- ')) {
                 return (
-                  <li key={i} className="ml-4 text-base leading-relaxed"
-                    dangerouslySetInnerHTML={{
-                      __html: trimmedLine.replace('- ', '')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    }}
-                  />
+                  <div key={i} className="ml-4">
+                    <Textarea
+                      defaultValue={trimmedLine.replace('- ', '')}
+                      onChange={(e) => handleContentChange(index, i, e.target.value, true)}
+                      className={`min-h-[40px] bg-background/50 backdrop-blur-sm resize-none ${
+                        !isEditing ? 'cursor-default border-transparent focus-visible:ring-0' : ''
+                      }`}
+                      disabled={!isEditing}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                );
+              }
+              
+              // Check if the line contains text between ** **
+              if (trimmedLine.match(/\*\*(.*?)\*\*/)) {
+                return (
+                  <h3 key={i} className="text-lg font-semibold mt-4 mb-2">
+                    {trimmedLine.replace(/\*\*(.*?)\*\*/g, '$1')}
+                  </h3>
                 );
               }
               
               return (
-                <p key={i} className="text-base leading-relaxed"
-                  dangerouslySetInnerHTML={{
-                    __html: trimmedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  }}
+                <Textarea
+                  key={i}
+                  defaultValue={trimmedLine}
+                  onChange={(e) => handleContentChange(index, i, e.target.value, false)}
+                  className={`min-h-[40px] bg-background/50 backdrop-blur-sm resize-none ${
+                    !isEditing ? 'cursor-default border-transparent focus-visible:ring-0' : ''
+                  }`}
+                  disabled={!isEditing}
+                  readOnly={!isEditing}
                 />
               );
             })}
@@ -159,6 +179,30 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
         </Card>
       );
     });
+  };
+
+  const handleContentChange = (sectionIndex: number, lineIndex: number, newValue: string, isList: boolean) => {
+    const sections = generatedPlan.split(/(?=##\s+[A-Z])/);
+    const section = sections[sectionIndex];
+    const lines = section.split('\n');
+    
+    // Handle section titles with asterisks
+    if (lineIndex === 0) {
+      const titleMatch = lines[0].match(/##\s+(.*)/);
+      if (titleMatch) {
+        lines[0] = `## **${newValue}**`;
+      }
+    } else {
+      // Handle regular content lines
+      if (isList) {
+        lines[lineIndex + 1] = `- ${newValue}`;
+      } else {
+        lines[lineIndex + 1] = newValue;
+      }
+    }
+    
+    sections[sectionIndex] = lines.join('\n');
+    setGeneratedPlan(sections.join(''));
   };
 
   const handleSavePlanWithScroll = (title: string, content: string) => {
@@ -199,7 +243,16 @@ export function LessonCreator({ onSavePlan }: LessonCreatorProps) {
       {generatedPlan && (
         <div ref={contentRef}>
           <Card className="p-6 mb-6 bg-card/50 backdrop-blur-sm">
-            <h1 className="text-3xl font-bold mb-2">Lesson Plan: {prompt}</h1>
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-3xl font-bold">Lesson Plan: {prompt}</h1>
+              <Button
+                onClick={() => setIsEditing(!isEditing)}
+                variant="outline"
+                className="bg-background/50 backdrop-blur-sm"
+              >
+                {isEditing ? "Done Editing" : "Edit Plan"}
+              </Button>
+            </div>
           </Card>
           
           <div className="space-y-6">
