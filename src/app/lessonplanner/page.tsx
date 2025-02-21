@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useReactToPrint } from 'react-to-print';
-import { generateLessonPlan } from "@/lib/gemini";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { LessonCreator } from "@/components/LessonCreator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { LessonPlanDrawer } from "@/components/LessonPlanDrawer";
 
 interface LessonPlan {
   id: string;
@@ -17,11 +19,10 @@ interface LessonPlan {
 
 export default function LessonPlanner() {
   const router = useRouter();
-  const [prompt, setPrompt] = useState("");
-  const [generatedPlan, setGeneratedPlan] = useState<string>("");
   const [savedPlans, setSavedPlans] = useState<LessonPlan[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<LessonPlan | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
@@ -30,7 +31,6 @@ export default function LessonPlanner() {
       return;
     }
 
-    // Load saved plans from localStorage
     const saved = localStorage.getItem("lessonPlans");
     if (saved) {
       setSavedPlans(JSON.parse(saved));
@@ -42,26 +42,11 @@ export default function LessonPlanner() {
     router.push("/");
   };
 
-  const generatePlan = async () => {
-    setIsLoading(true);
-    try {
-      const response = await generateLessonPlan(prompt);
-      setGeneratedPlan(response);
-    } catch (error) {
-      console.error("Error generating plan:", error);
-      // Add error handling UI if needed
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const savePlan = () => {
-    if (!generatedPlan) return;
-
+  const handleSavePlan = (title: string, content: string) => {
     const newPlan: LessonPlan = {
       id: Date.now().toString(),
-      title: prompt.slice(0, 50) + "...",
-      content: generatedPlan,
+      title: title.slice(0, 50) + "...",
+      content,
       createdAt: new Date().toISOString(),
     };
 
@@ -74,68 +59,69 @@ export default function LessonPlanner() {
     content: () => printRef.current,
   });
 
+  const handlePlanClick = (plan: LessonPlan) => {
+    setSelectedPlan(plan);
+    setIsDrawerOpen(true);
+  };
+
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <div className="w-64 border-r p-4 bg-secondary/10">
-        <div className="flex flex-col h-full">
-          <h2 className="text-lg font-bold mb-4">Saved Plans</h2>
-          <div className="flex-grow overflow-auto">
-            {savedPlans.map((plan) => (
-              <div
-                key={plan.id}
-                className="p-3 mb-2 bg-card rounded-lg cursor-pointer hover:bg-accent/20"
-                onClick={() => {
-                  setPrompt(plan.title);
-                  setGeneratedPlan(plan.content);
-                }}
-              >
-                <h3 className="font-medium text-sm">{plan.title}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(plan.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
-          </div>
-          <Button onClick={handleLogout} variant="outline" className="mt-4">
-            Logout
-          </Button>
-        </div>
+    <div className="min-h-screen relative">
+      <div 
+        className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-slate-950"
+      >
+        <div 
+          className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:6rem_4rem]"
+        />
+        <div 
+          className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"
+        />
       </div>
-
-      {/* Main Content */}
-      <div className="flex-1 p-6 flex flex-col">
-        <div className="max-w-3xl mx-auto w-full">
-          <Textarea
-            placeholder="Enter your lesson plan topic or requirements..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="mb-4 h-32"
-          />
-          <div className="flex gap-2 mb-6">
-            <Button onClick={generatePlan} disabled={!prompt || isLoading}>
-              {isLoading ? "Generating..." : "Generate Plan"}
-            </Button>
+      <div className="relative">
+        <header className="border-b">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Lesson Planner</h1>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <Button onClick={handleLogout} variant="outline">
+                Logout
+              </Button>
+            </div>
           </div>
+        </header>
 
-          {generatedPlan && (
-            <Card>
-              <CardContent className="p-6" ref={printRef}>
-                <div className="prose max-w-none">
-                  <pre className="whitespace-pre-wrap">{generatedPlan}</pre>
-                </div>
-              </CardContent>
-              <div className="flex gap-2 p-4 border-t">
-                <Button onClick={savePlan} variant="outline">
-                  Save Plan
-                </Button>
-                <Button onClick={handlePrint} variant="outline">
-                  Download PDF
-                </Button>
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-[300px_1fr] gap-8">
+            <ScrollArea className="h-[calc(100vh-10rem)]">
+              <div className="pr-4 space-y-4">
+                <h2 className="font-semibold mb-4">Saved Plans</h2>
+                {savedPlans.map((plan) => (
+                  <Card
+                    key={plan.id}
+                    className={`p-4 cursor-pointer transition-colors hover:bg-accent/50 ${
+                      selectedPlan?.id === plan.id ? 'bg-accent' : ''
+                    }`}
+                    onClick={() => handlePlanClick(plan)}
+                  >
+                    <h3 className="font-medium text-sm">{plan.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(plan.createdAt).toLocaleDateString()}
+                    </p>
+                  </Card>
+                ))}
               </div>
-            </Card>
-          )}
+            </ScrollArea>
+
+            <div>
+              <LessonCreator onSavePlan={handleSavePlan} />
+            </div>
+          </div>
         </div>
+
+        <LessonPlanDrawer
+          plan={selectedPlan}
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+        />
       </div>
     </div>
   );
