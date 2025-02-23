@@ -24,7 +24,7 @@ interface LessonPlanDrawerProps {
   } | null;
   isOpen: boolean;
   onClose: () => void;
-  onDelete: (id: string) => void;
+  onDelete: (title: string) => void;
 }
 
 export function LessonPlanDrawer({ plan, isOpen, onClose, onDelete }: LessonPlanDrawerProps) {
@@ -166,7 +166,7 @@ export function LessonPlanDrawer({ plan, isOpen, onClose, onDelete }: LessonPlan
                 Download PDF
               </Button>
               <Button 
-                onClick={() => plan && onDelete(plan.id)}
+                onClick={() => plan && onDelete(plan.title)}
                 variant="destructive"
                 className="bg-destructive/90 hover:bg-destructive"
               >
