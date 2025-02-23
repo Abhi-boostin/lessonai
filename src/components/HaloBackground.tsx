@@ -34,7 +34,7 @@ export default function HaloBackground({ children }: { children: React.ReactNode
         vantaEffect.destroy();
       }
     };
-  }, [vantaEffect, initVanta]);
+  }, [vantaEffect]);
 
   return (
     <>
