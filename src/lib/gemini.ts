@@ -8,50 +8,77 @@ export async function generateLessonPlan(prompt: string): Promise<string> {
 
     const systemPrompt = `Create a detailed lesson plan for the following topic:
 
-${prompt}
+Lesson Plan: ${prompt}
 
-Basic Information
-- Subject Area:
-- Grade Level:
-- Duration:
-- Prerequisites:
+# Basic Information:
 
-Learning Objectives
-[List 3-4 specific, measurable objectives]
+Subject Area: [Specify subject area]
+Grade Level: [Specify grade level]
+Duration: [Specify duration]
+Prerequisites: [List prerequisites]
 
-Materials and Resources
-- Required Materials:
-- Technology Needs:
-- Additional Resources:
+# Learning Objectives:
 
-Lesson Structure
+[List 3-4 specific, measurable objectives separated by line breaks]
 
-1. Introduction (10 minutes)
-[Engaging hook and activation of prior knowledge]
+# Materials and Resources:
 
-2. Main Content (30 minutes)
-[Step-by-step instruction and activities]
+Required Materials:
+[List materials]
 
-3. Guided Practice (20 minutes)
-[Interactive activities and demonstrations]
+Technology Needs:
+[List technology requirements]
 
-4. Independent Practice (15 minutes)
-[Student-centered activities]
+Additional Resources:
+[List additional resources]
 
-5. Assessment (10 minutes)
-[Formative assessment strategies]
+# Lesson Structure:
 
-6. Conclusion (5 minutes)
-[Summary and reflection]
+Introduction (10 minutes):
+[Describe engaging hook and activation of prior knowledge]
 
-Extensions and Modifications
-- For Advanced Learners:
-- For Struggling Learners:
-- Homework/Follow-up:`;
+Main Content (30 minutes):
+[Describe step-by-step instruction and activities]
+
+Guided Practice (20 minutes):
+[Describe interactive activities and demonstrations]
+
+Independent Practice (15 minutes):
+[Describe student-centered activities]
+
+Assessment (10 minutes):
+[Describe formative assessment strategies]
+
+Conclusion (5 minutes):
+[Describe summary and reflection]
+
+# Extensions and Modifications:
+
+For Advanced Learners:
+[Provide extensions]
+
+For Struggling Learners:
+[Provide modifications]
+
+Homework/Follow-up:
+[Specify homework or follow-up activities]`;
 
     const result = await model.generateContent(systemPrompt);
     const response = await result.response;
-    return response.text();
+    
+    // Format the response to match the UI styling
+    let formattedResponse = response.text()
+      // Ensure section headers are properly formatted
+      .replace(/^#\s+([^:]+):/gm, '\n# $1:')
+      // Format subsections with proper spacing
+      .replace(/([A-Za-z]+)\s*\((\d+)\s*minutes\):/g, '\n$1 ($2 minutes):')
+      // Ensure proper line breaks between sections
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line)
+      .join('\n\n');
+
+    return formattedResponse;
   } catch (error) {
     console.error('Error generating lesson plan:', error);
     throw new Error('Failed to generate lesson plan');

@@ -76,16 +76,19 @@ export function LessonPlanDrawer({ plan, isOpen, onClose, onDelete }: LessonPlan
   };
 
   const formatText = (text: string) => {
+    // Remove markdown symbols but maintain structure
     return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\[(.*?)\]/g, '$1')
-      .replace(/^#\s+/g, ''); // Remove single hashes at the start of lines
+      .replace(/^#\s+([^:]+):/gm, '$1') // Remove # but keep section titles
+      .replace(/^\s*-\s*/gm, '') // Remove bullet points
+      .replace(/\[(.*?)\]/g, '$1') // Remove brackets
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markers
+      .trim();
   };
 
   if (!plan) return null;
 
   // Parse markdown-like sections
-  const sections = plan.content.split(/(?=##?\s+[A-Z])/);
+  const sections = plan.content.split(/(?=# [A-Z])/);
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
@@ -112,43 +115,36 @@ export function LessonPlanDrawer({ plan, isOpen, onClose, onDelete }: LessonPlan
               {sections.map((section, index) => {
                 if (!section.trim()) return null;
                 
-                const [title, ...content] = section.split('\n');
-                const isMainHeader = title.startsWith('# ');
-                const headerContent = title.replace(/^#+ /, '');
+                const [title, ...content] = section.split('\n\n');
+                const headerContent = title.replace(/^# /, '').replace(/:$/, '');
                 
                 return (
                   <Card key={index} className="p-6">
-                    <h2 className={`${
-                      isMainHeader ? 'text-2xl' : 'text-xl'
-                    } font-semibold text-primary mb-4`}>
+                    <h2 className="text-xl font-semibold text-primary mb-4">
                       {headerContent}
                     </h2>
-                    <div className="prose dark:prose-invert max-w-none">
-                      {content.map((line, i) => {
-                        if (line.startsWith('- ')) {
+                    <div className="prose dark:prose-invert max-w-none space-y-4">
+                      {content.map((paragraph, i) => {
+                        const lines = paragraph.split('\n');
+                        
+                        if (lines[0].includes('minutes):')) {
+                          // This is a lesson structure subsection
                           return (
-                            <li key={i} className="text-base leading-relaxed ml-4"
-                              dangerouslySetInnerHTML={{
-                                __html: formatText(line.replace('- ', ''))
-                              }}
-                            />
+                            <div key={i} className="ml-4">
+                              <h3 className="text-lg font-medium mb-2">
+                                {lines[0].replace(/:$/, '')}
+                              </h3>
+                              <p className="text-base leading-relaxed">
+                                {lines.slice(1).join('\n')}
+                              </p>
+                            </div>
                           );
                         }
-                        if (line.startsWith('### ')) {
-                          return (
-                            <h3 key={i} className="text-lg font-medium mt-4 mb-2"
-                              dangerouslySetInnerHTML={{
-                                __html: formatText(line.replace('### ', ''))
-                              }}
-                            />
-                          );
-                        }
-                        return line.trim() && (
-                          <p key={i} className="text-base leading-relaxed"
-                            dangerouslySetInnerHTML={{
-                              __html: formatText(line.trim())
-                            }}
-                          />
+                        
+                        return (
+                          <p key={i} className="text-base leading-relaxed">
+                            {formatText(paragraph)}
+                          </p>
                         );
                       })}
                     </div>
