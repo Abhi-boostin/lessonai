@@ -4,7 +4,8 @@ const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
 
 export async function generateLessonPlan(prompt: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Use the latest available model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     const systemPrompt = `Create a detailed lesson plan for the following topic:
 
@@ -63,16 +64,18 @@ For Struggling Learners:
 Homework/Follow-up:
 [Specify homework or follow-up activities]`;
 
-    const result = await model.generateContent(systemPrompt);
-    const response = await result.response;
-    
-    // Format the response to match the UI styling
-    let formattedResponse = response.text()
-      // Ensure section headers are properly formatted
+    // Generate content using the correct format
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
+    });
+
+    // Extract text from the response
+    const text = result.response.candidates[0]?.content?.parts[0]?.text || "No response generated.";
+
+    // Format the response for better readability
+    let formattedResponse = text
       .replace(/^#\s+([^:]+):/gm, '\n# $1:')
-      // Format subsections with proper spacing
       .replace(/([A-Za-z]+)\s*\((\d+)\s*minutes\):/g, '\n$1 ($2 minutes):')
-      // Ensure proper line breaks between sections
       .split('\n')
       .map(line => line.trim())
       .filter(line => line)
@@ -80,7 +83,7 @@ Homework/Follow-up:
 
     return formattedResponse;
   } catch (error) {
-    console.error('Error generating lesson plan:', error);
-    throw new Error('Failed to generate lesson plan');
+    console.error("Error generating lesson plan:", error);
+    throw new Error("Failed to generate lesson plan.");
   }
-} 
+}
