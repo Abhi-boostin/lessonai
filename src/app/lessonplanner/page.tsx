@@ -6,18 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useReactToPrint } from 'react-to-print';
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { LessonCreator } from "@/components/LessonCreator";
+import { LessonCreator } from "@/components/lesson-creator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LessonPlanDrawer } from "@/components/LessonPlanDrawer";
+import { LessonPlanDrawer } from "@/components/lesson-drawer";
 import { RefreshCcw } from "lucide-react";
 import { PixelBackground } from "@/components/PixelBackground";
-
-interface LessonPlan {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: string;
-}
+import { LessonPlan } from "@/types";
 
 export default function LessonPlanner() {
   const router = useRouter();
@@ -74,9 +68,9 @@ export default function LessonPlanner() {
     router.push('/');
   };
 
-  const handleDeletePlan = (id: string) => {
-    const updatedPlans = savedPlans.filter(plan => plan.id !== id);
-    localStorage.setItem('savedPlans', JSON.stringify(updatedPlans));
+  const handleDeletePlan = (title: string) => {
+    const updatedPlans = savedPlans.filter(plan => plan.title !== title);
+    localStorage.setItem('lessonPlans', JSON.stringify(updatedPlans));
     setSavedPlans(updatedPlans);
     setSelectedPlan(null);
     setIsDrawerOpen(false);
