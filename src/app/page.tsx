@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Auth from "@/components/Auth";
+import Auth from "@/components/auth";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import HaloBackground from "@/components/HaloBackground";
 import { LoginCredentials } from "@/components/LoginCredentials";
